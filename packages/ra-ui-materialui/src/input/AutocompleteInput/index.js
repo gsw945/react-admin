@@ -3,13 +3,13 @@ import PropTypes from 'prop-types';
 import get from 'lodash/get';
 import Paper from '@material-ui/core/Paper';
 import Popper from '@material-ui/core/Popper';
-import TextField from '@material-ui/core/TextField';
 import MenuItem from '@material-ui/core/MenuItem';
 import { withStyles, createStyles } from '@material-ui/core/styles';
 import parse from 'autosuggest-highlight/parse';
 import match from 'autosuggest-highlight/match';
 import compose from 'recompose/compose';
 import Downshift from 'downshift';
+import AutocompleteInputTextField from './AutocompleteInputTextField';
 
 import { addField, translate as withTranslate, FieldTitle } from 'ra-core';
 
@@ -214,7 +214,17 @@ export class AutocompleteInput extends React.Component {
     };
 
     render() {
-        const { classes = {}, input, id, label, options } = this.props;
+        const {
+            classes = {},
+            input,
+            id,
+            label,
+            options,
+            source,
+            resource,
+            isRequired,
+            fullWidth,
+        } = this.props;
         const storeInputRef = input => {
             this.inputEl = input;
             this.updateAnchorEl();
@@ -240,15 +250,19 @@ export class AutocompleteInput extends React.Component {
                     const isMenuOpen = isOpen && this.shouldRenderSuggestions();
                     return (
                         <div className={classes.container}>
-                            {this.renderInput({
-                                fullWidth: true,
-                                classes,
-                                labelProps: getLabelProps({ label }),
-                                InputProps: getInputProps({
+                            <AutocompleteInputTextField
+                                fullWidth={fullWidth}
+                                classes={classes}
+                                labelProps={getLabelProps({ label })}
+                                InputProps={getInputProps({
                                     onFocus: openMenu,
-                                }),
-                                ref: storeInputRef,
-                            })}
+                                })}
+                                inputRef={storeInputRef}
+                                source={source}
+                                resource={resource}
+                                isRequired={isRequired}
+                                handleChange={this.updateFilter}
+                            />
                             <Popper
                                 open={isMenuOpen}
                                 anchorEl={this.inputEl}
@@ -297,43 +311,6 @@ export class AutocompleteInput extends React.Component {
             </Downshift>
         );
     }
-
-    renderInput = inputProps => {
-        const {
-            InputProps,
-            classes,
-            ref,
-            labelProps,
-            ...otherProps
-        } = inputProps;
-        const { source, resource, isRequired } = this.props;
-
-        return (
-            <TextField
-                label={
-                    <FieldTitle
-                        {...labelProps}
-                        source={source}
-                        resource={resource}
-                        isRequired={isRequired}
-                    />
-                }
-                InputProps={{
-                    inputRef: ref,
-                    classes: {
-                        root: classes.inputRoot,
-                        input: classes.inputInput,
-                    },
-                    ...InputProps,
-                    onChange: event => {
-                        InputProps.onChange(event);
-                        this.updateFilter(event.target.value);
-                    },
-                }}
-                {...otherProps}
-            />
-        );
-    };
 
     renderSuggestion = ({
         suggestion,
